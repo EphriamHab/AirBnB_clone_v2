@@ -1,28 +1,24 @@
-#!/usr/bin/python3
-'''module:
-create tarball artifact of static files in local
-'''
-
-from fabric.api import local
+from fabric import task
 from datetime import datetime
 import os
 
+@task
+def do_pack(c):
+    """Generates a .tgz archive from the contents of the web_static folder"""
 
-def do_pack():
-    '''function:
-    generates a .tgz archive from the contents of the web_static folder
-    '''
-    now = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+    # Create the versions folder if it doesn't exist
+    if not os.path.exists("versions"):
+        os.makedirs("versions")
 
-    artifact = f'versions/web_static_{now}.tgz'
-    print(f'Packing web_static to {artifact}')
-    if not os.path.exists('versions'):
-        local('mkdir -p versions')
+    # Get the current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-    fab_stat = local(f'tar -cvzf {artifact} web_static')
-    if fab_stat.succeeded:
-        size = os.path.getsize(artifact)
-        print(f'web_static packed: {artifact} -> {size}Bytes')
-        return artifact
-    else:
-        return None
+    # Create the archive file name
+    archive_name = "web_static_{}.tgz".format(timestamp)
+
+    # Compress the web_static folder into the archive
+    c.local("tar -cvzf versions/{} web_static".format(archive_name))
+
+    # Return the archive path if successfully generated, otherwise None
+    return "versions/{}".format(archive_name)
+
